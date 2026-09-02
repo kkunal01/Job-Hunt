@@ -15,8 +15,12 @@ export const register = async (req, res) => {
             });
         };
         const file = req.file;
-        const fileUri = getDataUri(file);
-        const cloudResponse = await cloudinary.uploader.upload(fileUri.content);
+        let profilePhoto = "";
+        if (file) {
+            const fileUri = getDataUri(file);
+            const cloudResponse = await cloudinary.uploader.upload(fileUri.content);
+            profilePhoto = cloudResponse.secure_url;
+        }
 
         const user = await User.findOne({ email });
         if (user) {
@@ -34,7 +38,7 @@ export const register = async (req, res) => {
             password: hashedPassword,
             role,
             profile:{
-                profilePhoto:cloudResponse.secure_url,
+                profilePhoto,
             }
         });
 
@@ -44,6 +48,10 @@ export const register = async (req, res) => {
         });
     } catch (error) {
         console.log(error);
+        return res.status(500).json({
+            message: "Unable to create account. Please try again.",
+            success: false
+        });
     }
 }
 export const login = async (req, res) => {
